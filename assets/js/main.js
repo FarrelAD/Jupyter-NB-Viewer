@@ -2,132 +2,108 @@ console.log("Hello this is a Jupyter Notebook Viewer script!");
 
 import { parseNotebook } from "./utils/parser.js";
 import { notebook2html } from "./utils/converter.js";
+import { initFileUpload } from "./components/fileUpload.js";
+import { initThemeSelector } from "./components/themeSelector.js";
+import { initMobileToggle } from "./components/mobileToggle.js";
+import { initActionButtons } from "./components/actionButtons.js";
+import { initPreviewPanel } from "./components/previewPanel.js";
 
-// DOM Elements
-const fileInput = document.getElementById("file-input");
-const uploadArea = document.getElementById("upload-area");
-const fileInfo = document.getElementById("file-info");
-const fileName = document.getElementById("file-name");
-const fileSize = document.getElementById("file-size");
-const themeSelector = document.getElementById("theme-selector");
-const mobileToggle = document.getElementById("mobile-toggle");
-const inputPanel = document.getElementById("input-panel");
-const loadBtn = document.getElementById("load-btn");
-const clearBtn = document.getElementById("clear-btn");
-const downloadBtn = document.getElementById("download-btn");
-const notebookFrame = document.getElementById("notebook-frame");
-const emptyState = document.getElementById("empty-state");
-const loadingState = document.getElementById("loading");
-
-// State
+// Application State
 let currentNotebookHTML = null;
 let currentParsedNotebook = null;
-let selectedTheme = 'github';
 
-// File size formatter
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-}
-
-// Handle file selection
-function handleFileSelect(file) {
-    if (!file) return;
-
-    // Safety check
-    if (!file.name.endsWith('.ipynb')) {
-        alert('Please upload a .ipynb file');
-        fileInput.value = '';
-        return;
+// Initialize Components
+const fileUpload = initFileUpload({
+    onFileSelect: (file) => {
+        // Enable action buttons when file is selected
+        buttons.enableLoad();
+        buttons.enableClear();
     }
+});
 
-    // Update file info display
-    fileName.textContent = file.name;
-    fileSize.textContent = formatFileSize(file.size);
-    fileInfo.classList.add('active');
+const themeSelector = initThemeSelector({
+    onThemeChange: (theme) => {
+        // Re-render notebook with new theme if already loaded
+        if (currentParsedNotebook) {
+            renderNotebook(currentParsedNotebook, theme);
+        }
+    }
+});
 
-    // Enable buttons
-    loadBtn.disabled = false;
-    clearBtn.disabled = false;
-}
+const mobileToggle = initMobileToggle();
 
-// Load and render notebook
+const preview = initPreviewPanel();
+
+const buttons = initActionButtons({
+    onLoad: loadNotebook,
+    onClear: clearNotebook,
+    onDownload: downloadHTML
+});
+
+// Core Functions
+
 async function loadNotebook() {
-    const file = fileInput.files[0];
+    const file = fileUpload.getFile();
     if (!file) return;
 
     try {
         // Show loading state
-        emptyState.classList.add('hidden');
-        notebookFrame.classList.remove('active');
-        loadingState.classList.add('active');
-        loadBtn.disabled = true;
+        preview.showLoading();
+        buttons.disableLoad();
 
-        // Parse and convert notebook
+        // Parse notebook (only once)
         if (!currentParsedNotebook) {
             currentParsedNotebook = await parseNotebook(file);
         }
-        const html = notebook2html(currentParsedNotebook, selectedTheme);
 
-        // Store HTML for download
-        currentNotebookHTML = html;
-
-        // Render in iframe
-        const doc = notebookFrame.contentDocument;
-        doc.open();
-        doc.write(html);
-        doc.close();
-
-        // Show notebook frame
-        loadingState.classList.remove('active');
-        notebookFrame.classList.add('active');
+        // Render with current theme
+        const theme = themeSelector.getTheme();
+        renderNotebook(currentParsedNotebook, theme);
 
         // Enable download button
-        downloadBtn.disabled = false;
-        loadBtn.disabled = false;
+        buttons.enableDownload();
+        buttons.enableLoad();
 
     } catch (error) {
         console.error('Error loading notebook:', error);
         alert('Failed to load notebook. Please check the file format.');
 
         // Reset to empty state
-        loadingState.classList.remove('active');
-        emptyState.classList.remove('hidden');
-        loadBtn.disabled = false;
+        preview.showEmpty();
+        buttons.enableLoad();
     }
 }
 
-// Clear current notebook
+function renderNotebook(parsedNotebook, theme) {
+    // Convert to HTML
+    const html = notebook2html(parsedNotebook, theme);
+
+    // Store for download
+    currentNotebookHTML = html;
+
+    // Display in preview
+    preview.showNotebook(html);
+}
+
 function clearNotebook() {
-    // Reset file input
-    fileInput.value = '';
+    // Clear file upload
+    fileUpload.clearFile();
 
-    // Hide file info
-    fileInfo.classList.remove('active');
+    // Reset preview
+    preview.showEmpty();
 
-    // Reset states
-    notebookFrame.classList.remove('active');
-    loadingState.classList.remove('active');
-    emptyState.classList.remove('hidden');
-
-    // Clear stored data
+    // Clear state
     currentNotebookHTML = null;
     currentParsedNotebook = null;
 
     // Disable buttons
-    loadBtn.disabled = true;
-    clearBtn.disabled = true;
-    downloadBtn.disabled = true;
+    buttons.disableAll();
 }
 
-// Download HTML
 function downloadHTML() {
     if (!currentNotebookHTML) return;
 
-    const file = fileInput.files[0];
+    const file = fileUpload.getFile();
     const filename = file ? file.name.replace('.ipynb', '.html') : 'notebook.html';
 
     const blob = new Blob([currentNotebookHTML], { type: 'text/html' });
@@ -140,67 +116,3 @@ function downloadHTML() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
-
-// Event Listeners
-
-// Click to upload
-uploadArea.addEventListener('click', () => {
-    fileInput.click();
-});
-
-// File input change
-fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    handleFileSelect(file);
-});
-
-// Drag and drop
-uploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadArea.classList.add('drag-over');
-});
-
-uploadArea.addEventListener('dragleave', () => {
-    uploadArea.classList.remove('drag-over');
-});
-
-uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.classList.remove('drag-over');
-
-    const file = e.dataTransfer.files[0];
-    if (file) {
-        // Manually set the file to the input
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
-
-        handleFileSelect(file);
-    }
-});
-
-// Button clicks
-loadBtn.addEventListener('click', loadNotebook);
-clearBtn.addEventListener('click', clearNotebook);
-downloadBtn.addEventListener('click', downloadHTML);
-
-// Theme change
-themeSelector.addEventListener('change', (e) => {
-    selectedTheme = e.target.value;
-
-    // Re-render if notebook is already loaded
-    if (currentParsedNotebook) {
-        const html = notebook2html(currentParsedNotebook, selectedTheme);
-        currentNotebookHTML = html;
-
-        const doc = notebookFrame.contentDocument;
-        doc.open();
-        doc.write(html);
-        doc.close();
-    }
-});
-
-// Mobile toggle for collapsible panel
-mobileToggle.addEventListener('click', () => {
-    inputPanel.classList.toggle('collapsed');
-});
