@@ -18,47 +18,56 @@
         <!-- Main Content -->
         <main class="main-content">
             <!-- Left Column: Input Panel -->
-            <section class="input-panel">
-                <!-- Upload Section -->
-                <div>
-                    <h2 class="section-title">Upload Notebook</h2>
-                    <div class="upload-area" id="upload-area">
-                        <span class="upload-icon">📄</span>
-                        <p class="upload-text">Drop your .ipynb file here</p>
-                        <p class="upload-hint">or click to browse</p>
+            <section class="input-panel" id="input-panel">
+                <!-- Mobile Toggle Button -->
+                <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle controls">
+                    <span class="toggle-icon">▼</span>
+                    <span class="toggle-text">Controls</span>
+                </button>
+
+                <!-- Panel Content -->
+                <div class="panel-content" id="panel-content">
+                    <!-- Upload Section -->
+                    <div>
+                        <h2 class="section-title">Upload Notebook</h2>
+                        <div class="upload-area" id="upload-area">
+                            <span class="upload-icon">📄</span>
+                            <p class="upload-text">Drop your .ipynb file here</p>
+                            <p class="upload-hint">or click to browse</p>
+                        </div>
+                        <input type="file" id="file-input" class="file-input" accept=".ipynb" />
                     </div>
-                    <input type="file" id="file-input" class="file-input" accept=".ipynb" />
-                </div>
 
-                <!-- File Info (Hidden by default) -->
-                <div class="file-info" id="file-info">
-                    <p class="file-name" id="file-name">No file selected</p>
-                    <p class="file-size" id="file-size">0 KB</p>
-                </div>
+                    <!-- File Info (Hidden by default) -->
+                    <div class="file-info" id="file-info">
+                        <p class="file-name" id="file-name">No file selected</p>
+                        <p class="file-size" id="file-size">0 KB</p>
+                    </div>
 
-                <!-- Theme Selector -->
-                <div>
-                    <h2 class="section-title">Syntax Theme</h2>
-                    <select id="theme-selector" class="theme-select">
-                        <option value="github">GitHub (Light)</option>
-                        <option value="github-dark">GitHub Dark</option>
-                        <option value="monokai">Monokai</option>
-                        <option value="atom-one-dark">Atom One Dark</option>
-                        <option value="vs">Visual Studio</option>
-                        <option value="stackoverflow-light">Stack Overflow</option>
-                        <option value="nord">Nord</option>
-                        <option value="tokyo-night-dark">Tokyo Night</option>
-                    </select>
-                </div>
+                    <!-- Theme Selector -->
+                    <div>
+                        <h2 class="section-title">Syntax Theme</h2>
+                        <select id="theme-selector" class="theme-select">
+                            <option value="github">GitHub (Light)</option>
+                            <option value="github-dark">GitHub Dark</option>
+                            <option value="monokai">Monokai</option>
+                            <option value="atom-one-dark">Atom One Dark</option>
+                            <option value="vs">Visual Studio</option>
+                            <option value="stackoverflow-light">Stack Overflow</option>
+                            <option value="nord">Nord</option>
+                            <option value="tokyo-night-dark">Tokyo Night</option>
+                        </select>
+                    </div>
 
-                <!-- Action Buttons -->
-                <div class="button-group">
-                    <button class="btn btn-primary" id="load-btn" disabled>
-                        Load Notebook
-                    </button>
-                    <button class="btn btn-secondary" id="clear-btn" disabled>
-                        Clear
-                    </button>
+                    <!-- Action Buttons -->
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="load-btn" disabled>
+                            Load Notebook
+                        </button>
+                        <button class="btn btn-secondary" id="clear-btn" disabled>
+                            Clear
+                        </button>
+                    </div>
                 </div>
             </section>
 

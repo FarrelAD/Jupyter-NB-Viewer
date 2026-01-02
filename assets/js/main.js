@@ -10,6 +10,8 @@ const fileInfo = document.getElementById("file-info");
 const fileName = document.getElementById("file-name");
 const fileSize = document.getElementById("file-size");
 const themeSelector = document.getElementById("theme-selector");
+const mobileToggle = document.getElementById("mobile-toggle");
+const inputPanel = document.getElementById("input-panel");
 const loadBtn = document.getElementById("load-btn");
 const clearBtn = document.getElementById("clear-btn");
 const downloadBtn = document.getElementById("download-btn");
@@ -196,4 +198,9 @@ themeSelector.addEventListener('change', (e) => {
         doc.write(html);
         doc.close();
     }
+});
+
+// Mobile toggle for collapsible panel
+mobileToggle.addEventListener('click', () => {
+    inputPanel.classList.toggle('collapsed');
 });
